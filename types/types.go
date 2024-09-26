@@ -11,6 +11,8 @@ type UserStore interface {
 
 type LocationStore interface {
 	CreateLocation(Location) error
+	GetLocations() ([]*Location, error)
+	GetLocationByName(string) (*Location, error)
 }
 
 type User struct {
