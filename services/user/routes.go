@@ -28,39 +28,33 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 }
 
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
-	var payload types.LoginUserPayload
-
-	if err := utils.ParseJSON(r, &payload); err != nil {
+	var user types.LoginUserPayload
+	if err := utils.ParseJSON(r, &user); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	if err := utils.Validate.Struct(payload); err != nil {
+	if err := utils.Validate.Struct(user); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload of %v", errors))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
 		return
 	}
 
-	user, err := h.store.GetUserByEmail(payload.Email)
+	u, err := h.store.GetUserByEmail(user.Email)
 	if err != nil {
-		utils.WriteError(w, http.StatusNotFound, err)
-		return
-	}
-	if user == nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with email %s does not exist", payload.Email))
-		return
-	}
-
-	if !auth.ComparePasswords(user.Password, []byte(payload.Password)) {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found, invalid email or password"))
 		return
 	}
 
-	secret := []byte(config.Envs.JWTSecret)
-	token, err := auth.CreateJWT(secret, user.ID)
+	if !auth.ComparePasswords(u.Password, []byte(user.Password)) {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid email or password"))
+		return
+	}
 
+	secret := []byte(config.Envs.JWTSecret)
+	token, err := auth.CreateJWT(secret, u.ID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("could not authenticate"))
+		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -93,6 +87,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	hashedPassword, err := auth.HashPassword(payload.Password)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
 	}
 
 	err = h.store.CreateUser(types.User{

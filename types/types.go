@@ -13,6 +13,13 @@ type LocationStore interface {
 	CreateLocation(Location) error
 	GetLocations() ([]*Location, error)
 	GetLocationByName(string) (*Location, error)
+	GetLocationsByKey(string, string) ([]*Location, error)
+	GetLocationByID(int) (*Location, error)
+}
+
+type MembershipStore interface {
+	CreateMembership(Membership) error
+	GetMembership(*User) *Membership
 }
 
 type User struct {
@@ -41,6 +48,22 @@ type Location struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 }
 
+type Membership struct {
+	ID             int       `json:"id"`
+	UserID         int       `json:"user_id"`
+	MembershipType string    `json:"membership_type"`
+	Status         string    `json:"status"`
+	StartDate      time.Time `json:"start_date"`
+	EndDate        time.Time `json:"end_date"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+type MembershipLocation struct {
+	MembershipID int `json:"membership_id"`
+	LocationID   int `json:"location_id"`
+}
+
 type LoginUserPayload struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password"`
@@ -65,4 +88,12 @@ type CreateLocationPayload struct {
 	Capacity       int    `json:"capacity,omitempty"`
 	OperatingHours string `json:"operating_hours,omitempty"`
 	IsActive       bool   `json:"is_active"`
+}
+
+type CreateMembershipPayload struct {
+	UserID         int       `json:"user_id"`
+	MembershipType string    `json:"membership_type"`
+	Status         string    `json:"status"`
+	StartDate      time.Time `json:"start_date"`
+	EndDate        time.Time `json:"end_date"`
 }

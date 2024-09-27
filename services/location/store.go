@@ -2,6 +2,7 @@ package location
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/phildehovre/go-gym/types"
 )
@@ -93,7 +94,7 @@ func scanRowsIntoLocation(rows *sql.Rows) (*types.Location, error) {
 }
 
 func (s *Store) GetLocationByName(name string) (*types.Location, error) {
-	rows, err := s.db.Query(`SELECT * WHERE name== ?`, name)
+	rows, err := s.db.Query(`SELECT * FROM locations WHERE name = ?`, name)
 	if err != nil {
 		return nil, err
 	}
@@ -109,4 +110,43 @@ func (s *Store) GetLocationByName(name string) (*types.Location, error) {
 		loc = location
 	}
 	return loc, nil
+}
+
+func (s *Store) GetLocationByID(id int) (*types.Location, error) {
+	rows, err := s.db.Query(`SELECT * FROM locations WHERE id = ?`, id)
+	if err != nil {
+		return nil, err
+	}
+
+	var loc *types.Location
+
+	for rows.Next() {
+		location, err := scanRowsIntoLocation(rows)
+
+		if err != nil {
+			return nil, err
+		}
+		loc = location
+	}
+	return loc, nil
+}
+
+func (s *Store) GetLocationsByKey(key string, value string) ([]*types.Location, error) {
+	var locations []*types.Location
+
+	rows, err := s.db.Query(fmt.Sprintf(`SELECT * FROM locations WHERE %s = ?`, key), value)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		location, err := scanRowsIntoLocation(rows)
+		if err != nil {
+			return nil, err
+		}
+		locations = append(locations, location)
+	}
+
+	return locations, nil
 }

@@ -3,6 +3,7 @@ package location
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/phildehovre/go-gym/types"
@@ -20,7 +21,7 @@ func NewHandler(store types.LocationStore) *Handler {
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/location", h.handleCreateLocation).Methods("POST")
 	router.HandleFunc("/location", h.handleGetLocations).Methods("GET")
-	router.HandleFunc("/location/:name", h.handleGetLocationByName).Methods("GET")
+	router.HandleFunc("/location/{id}", h.handleGetLocationByID).Methods("GET")
 }
 
 func (h *Handler) handleCreateLocation(w http.ResponseWriter, r *http.Request) {
@@ -29,13 +30,12 @@ func (h *Handler) handleCreateLocation(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
-	//todo
-	// check if gym by the same name already exists
-	// _, err := h.store.GetLocationByName(payload.Name)
-	// if err == nil {
-	// 	utils.WriteError(w, http.StatusBadRequest, err)
-	// 	return
-	// }
+
+	locations, _ := h.store.GetLocationsByKey("name", payload.Name)
+	if len(locations) > 0 {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("a location with this name already exists: %s", payload.Name))
+		return
+	}
 
 	err := h.store.CreateLocation(types.Location{
 		Name:           payload.Name,
@@ -68,17 +68,24 @@ func (h *Handler) handleGetLocations(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleGetLocationByName(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (h *Handler) handleGetLocationByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	name, ok := vars["name"]
+	idString, ok := vars["id"]
+	id, _ := strconv.Atoi(idString)
+
+	fmt.Printf("ID: %d", id)
 	if !ok {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not a valid param %v", name))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not a valid param %v", id))
 	}
 
-	location, err := h.store.GetLocationByName(name)
+	location, err := h.store.GetLocationByID(id)
 	if err != nil {
 		utils.WriteError(w, http.StatusNotFound, err)
 		return
 	}
-	utils.WriteJSON(w, http.StatusFound, location)
+	utils.WriteJSON(w, http.StatusOK, location)
 
 }
