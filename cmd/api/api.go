@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/phildehovre/go-gym/services/location"
+	"github.com/phildehovre/go-gym/services/membership"
 	"github.com/phildehovre/go-gym/services/user"
 )
 
@@ -31,6 +32,10 @@ func (s *APIServer) Run() error {
 	locationStore := location.NewStore(s.db)
 	locationHandler := location.NewHandler(locationStore)
 	locationHandler.RegisterRoutes(subrouter)
+
+	membershipStore := membership.NewStore(s.db)
+	membershipHandler := membership.NewHandler(membershipStore, store)
+	membershipHandler.RegisterRoutes(subrouter)
 
 	err := http.ListenAndServe(s.addr, router)
 

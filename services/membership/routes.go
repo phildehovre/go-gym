@@ -15,8 +15,13 @@ type Handler struct {
 	userStore types.UserStore
 }
 
+func NewHandler(store types.MembershipStore, userStore types.UserStore) *Handler {
+	return &Handler{store: store, userStore: userStore}
+}
+
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/membership", auth.WithJWTAuth(h.handleCreateMembership, h.userStore)).Methods("POST")
+	router.HandleFunc("/membership", auth.WithJWTAuth(h.handleGetMembership, h.userStore)).Methods("GET")
 }
 
 func (h *Handler) handleCreateMembership(w http.ResponseWriter, r *http.Request) {
@@ -42,4 +47,13 @@ func (h *Handler) handleCreateMembership(w http.ResponseWriter, r *http.Request)
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, nil)
+}
+
+func (h *Handler) handleGetMembership(w http.ResponseWriter, r *http.Request) {
+	userId := auth.GetUserIDFromContext(r.Context())
+	membership, err := h.store.GetMembership(userId)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, err)
+	}
+	utils.WriteJSON(w, http.StatusOK, membership)
 }
