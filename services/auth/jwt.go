@@ -35,7 +35,6 @@ func WithJWTAuth(handlerFunc http.HandlerFunc, store types.UserStore) http.Handl
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenString := getTokenFromRequest(r)
 		token, err := validateToken(tokenString)
-		fmt.Println("TOKEN VALIDATION: ", tokenString)
 		if err != nil {
 			log.Printf("failed to validate token: %v", token)
 			premissionDenied(w)

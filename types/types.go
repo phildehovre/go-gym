@@ -19,7 +19,7 @@ type LocationStore interface {
 
 type MembershipStore interface {
 	CreateMembership(Membership) error
-	GetMembership(string) *Membership
+	GetMembership(int) (*Membership, error)
 }
 
 type User struct {

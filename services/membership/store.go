@@ -14,11 +14,26 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 func (s *Store) CreateMembership(membership types.Membership) error {
-	return nil
+	_, err := s.db.Exec(`INSERT INTO memberships (
+	user_id, 
+	membership_type,
+	status,
+	start_date,
+	end_date
+)
+	VALUES (?,?,?,?,?)
+	`,
+		membership.UserID,
+		membership.MembershipType,
+		membership.Status,
+		membership.StartDate,
+		membership.EndDate,
+	)
+	return err
 }
 
-func (s *Store) GetMembership(userId string) (*types.Membership, error) {
-	rows, err := s.db.Query(`SELECT * FROM memberships WHERE user_isd = ?`, userId)
+func (s *Store) GetMembership(userId int) (*types.Membership, error) {
+	rows, err := s.db.Query(`SELECT * FROM memberships WHERE user_id = ?`, userId)
 	if err != nil {
 		return nil, err
 	}
