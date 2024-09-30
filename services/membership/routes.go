@@ -1,7 +1,6 @@
 package membership
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -33,15 +32,16 @@ func (h *Handler) handleCreateMembership(w http.ResponseWriter, r *http.Request)
 	}
 
 	userId := auth.GetUserIDFromContext(r.Context())
-	fmt.Println(userId)
 
-	if err := h.store.CreateMembership(types.Membership{
+	_, err := h.store.CreateMembership(types.Membership{
 		UserID:         userId,
 		MembershipType: payload.MembershipType,
 		Status:         payload.Status,
 		StartDate:      payload.StartDate,
 		EndDate:        payload.EndDate,
-	}); err != nil {
+	}, payload.LocationIDS)
+
+	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}

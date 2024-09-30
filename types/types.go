@@ -1,6 +1,9 @@
 package types
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 type UserStore interface {
 	GetUserByEmail(email string) (*User, error)
@@ -18,8 +21,9 @@ type LocationStore interface {
 }
 
 type MembershipStore interface {
-	CreateMembership(Membership) error
+	CreateMembership(Membership, []int) (int, error)
 	GetMembership(int) (*Membership, error)
+	CreateMembershipLocation(*MembershipLocation, *sql.Tx) error
 }
 
 type User struct {
@@ -96,4 +100,5 @@ type CreateMembershipPayload struct {
 	Status         string    `json:"status"`
 	StartDate      time.Time `json:"start_date"`
 	EndDate        time.Time `json:"end_date"`
+	LocationIDS    []int     `json:"location_id"`
 }

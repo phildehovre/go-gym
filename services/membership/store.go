@@ -13,22 +13,63 @@ type Store struct {
 func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
-func (s *Store) CreateMembership(membership types.Membership) error {
-	_, err := s.db.Exec(`INSERT INTO memberships (
-	user_id, 
-	membership_type,
-	status,
-	start_date,
-	end_date
-)
-	VALUES (?,?,?,?,?)
-	`,
+func (s *Store) CreateMembership(membership types.Membership, locationIDS []int) (int, error) {
+	// Start a transaction
+	tx, err := s.db.Begin()
+	if err != nil {
+		return -1, err
+	}
+
+	// Create membership
+	res, err := tx.Exec(`INSERT INTO memberships (
+		user_id, 
+		membership_type,
+		status,
+		start_date,
+		end_date
+	)
+	VALUES (?,?,?,?,?)`,
 		membership.UserID,
 		membership.MembershipType,
 		membership.Status,
 		membership.StartDate,
 		membership.EndDate,
 	)
+	if err != nil {
+		tx.Rollback()
+		return -1, err
+	}
+
+	membershipId, err := res.LastInsertId()
+	if err != nil {
+		tx.Rollback()
+		return -1, err
+	}
+
+	for _, loc := range locationIDS {
+		err = s.CreateMembershipLocation(&types.MembershipLocation{LocationID: loc, MembershipID: int(membershipId)}, tx)
+		if err != nil {
+			tx.Rollback()
+			return -1, err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return -1, err
+	}
+
+	return int(membershipId), nil
+}
+
+func (s *Store) CreateMembershipLocation(ml *types.MembershipLocation, tx *sql.Tx) error {
+	_, err := tx.Exec(`
+	INSERT INTO membershipLocations (
+		membership_id,
+		location_id
+	) VALUES (?,?)
+	`, ml.MembershipID, ml.LocationID)
+
 	return err
 }
 
