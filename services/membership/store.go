@@ -82,7 +82,7 @@ func (s *Store) GetMembership(userId int) (*types.Membership, error) {
 
 	membership := new(types.Membership)
 	for rows.Next() {
-		m, err := scanRowsIntoMembership(rows)
+		m, err := ScanRowsIntoMembership(rows)
 		if err != nil {
 			return nil, err
 		}
@@ -149,7 +149,7 @@ func (s *Store) UpdateMembership(m *types.Membership) error {
 	return nil
 }
 
-func scanRowsIntoMembership(rows *sql.Rows) (*types.Membership, error) {
+func ScanRowsIntoMembership(rows *sql.Rows) (*types.Membership, error) {
 	membership := new(types.Membership)
 
 	err := rows.Scan(

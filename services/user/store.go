@@ -23,7 +23,7 @@ func (s *Store) GetUserByEmail(email string) (*types.User, error) {
 
 	u := new(types.User)
 	for rows.Next() {
-		u, err = scanRowIntoUser(rows)
+		u, err = ScanRowIntoUser(rows)
 		if err != nil {
 			return nil, err
 		}
@@ -52,7 +52,7 @@ func (s *Store) GetUsers() ([]*types.User, error) {
 
 	users := []*types.User{}
 	for rows.Next() {
-		u, err := scanRowIntoUser(rows)
+		u, err := ScanRowIntoUser(rows)
 		if err != nil {
 			return nil, err
 		}
@@ -72,7 +72,7 @@ func (s *Store) GetUserById(id int) (*types.User, error) {
 
 	var user *types.User
 	for rows.Next() {
-		u, err := scanRowIntoUser(rows)
+		u, err := ScanRowIntoUser(rows)
 		if err != nil {
 			return nil, err
 		}
@@ -85,7 +85,7 @@ func (s *Store) GetUserById(id int) (*types.User, error) {
 	return user, nil
 }
 
-func scanRowIntoUser(rows *sql.Rows) (*types.User, error) {
+func ScanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 	user := new(types.User)
 
 	err := rows.Scan(
@@ -93,6 +93,7 @@ func scanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 		&user.FirstName,
 		&user.LastName,
 		&user.Email,
+		&user.RoleID,
 		&user.Password,
 		&user.CreatedAt,
 	)

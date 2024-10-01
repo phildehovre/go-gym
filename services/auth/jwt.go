@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -17,12 +18,14 @@ import (
 type contextKey string
 
 const UserKey contextKey = "userID"
+const AdminKey contextKey = "adminKey"
 
-func CreateJWT(secret []byte, userID int) (string, error) {
+func CreateJWT(secret []byte, userID int, role string) (string, error) {
 	expiration := time.Second * time.Duration(config.Envs.JWTExpirationInSeconds)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userID":    strconv.Itoa(userID),
 		"expiredAt": time.Now().Add(expiration).Unix(),
+		"role":      role,
 	})
 	tokenString, err := token.SignedString(secret)
 	if err != nil {
@@ -98,5 +101,41 @@ func validateToken(t string) (*jwt.Token, error) {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}
 		return []byte(config.Envs.JWTSecret), nil
+	})
+}
+
+func AdminMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tokenString := r.Header.Get("Authorization")
+
+		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			return []byte(config.Envs.JWTSecret), nil
+		})
+
+		if err != nil || !token.Valid {
+			premissionDenied(w)
+			return
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			premissionDenied(w)
+			return
+		}
+
+		role, ok := claims["role"].(string)
+		if !ok || role != "Admin" {
+			premissionDenied(w)
+			return
+		}
+
+		if userID, ok := claims["userID"].(string); ok {
+			ctx := context.WithValue(r.Context(), UserKey, userID)
+			r = r.WithContext(ctx)
+		}
+
+		next.ServeHTTP(w, r)
 	})
 }

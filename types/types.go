@@ -14,9 +14,7 @@ type MembershipStore interface {
 
 	// New methods
 	DeleteMembership(int) error
-	// GetAllMemberships() ([]*Membership, error)
-	// GetMembershipsByUserID(int) ([]*Membership, error)
-	// RenewMembership(int) error
+	RenewMembership(int) error
 }
 
 type LocationStore interface {
@@ -45,13 +43,26 @@ type UserStore interface {
 	// GetUsersByMembershipID(int) ([]*User, error)
 }
 
+type AdminStore interface {
+	GetAllUsers() ([]*User, error)
+	UpdateUserRole(userID int, roleID int) error
+	GetAllMemberships() []*Membership
+	CancelMembership(userID int) error
+}
+
 type User struct {
 	ID        int       `json:"id"`
 	FirstName string    `json:"firstName"`
 	LastName  string    `json:"lastName"`
 	Email     string    `json:"email"`
 	Password  string    `json:"-"`
+	RoleID    int       `json:"role_id"`
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+type Role struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 type Location struct {
