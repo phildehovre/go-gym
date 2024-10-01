@@ -16,6 +16,12 @@ type Handler struct {
 	userStore types.UserStore
 }
 
+const (
+	active   = "Active"
+	expired  = "Expired"
+	canceled = "Canceled"
+)
+
 func NewHandler(store types.MembershipStore, userStore types.UserStore) *Handler {
 	return &Handler{store: store, userStore: userStore}
 }
@@ -110,7 +116,7 @@ func (h *Handler) handleDeactivateMembership(w http.ResponseWriter, r *http.Requ
 	}
 
 	membership.EndDate = time.Now()
-	membership.Status = "Inactive"
+	membership.Status = canceled
 
 	err = h.store.UpdateMembership(membership)
 	if err != nil {
