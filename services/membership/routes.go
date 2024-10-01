@@ -1,7 +1,9 @@
 package membership
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/phildehovre/go-gym/services/auth"
@@ -19,8 +21,11 @@ func NewHandler(store types.MembershipStore, userStore types.UserStore) *Handler
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/membership", auth.WithJWTAuth(h.handleCreateMembership, h.userStore)).Methods("POST")
-	router.HandleFunc("/membership", auth.WithJWTAuth(h.handleGetMembership, h.userStore)).Methods("GET")
+	router.HandleFunc("/membership", auth.WithJWTAuth(h.handleCreateMembership, h.userStore)).Methods(http.MethodPost)
+	router.HandleFunc("/membership", auth.WithJWTAuth(h.handleGetMembership, h.userStore)).Methods(http.MethodGet)
+	router.HandleFunc("/membership", auth.WithJWTAuth(h.handleUpdateMembership, h.userStore)).Methods(http.MethodPatch)
+	router.HandleFunc("/membership", auth.WithJWTAuth(h.handleDeactivateMembership, h.userStore)).Methods(http.MethodDelete)
+	router.HandleFunc("/membership/locations", auth.WithJWTAuth(h.handleGetMembershipLocations, h.userStore)).Methods(http.MethodGet)
 }
 
 func (h *Handler) handleCreateMembership(w http.ResponseWriter, r *http.Request) {
@@ -57,3 +62,63 @@ func (h *Handler) handleGetMembership(w http.ResponseWriter, r *http.Request) {
 	}
 	utils.WriteJSON(w, http.StatusOK, membership)
 }
+
+func (h *Handler) handleUpdateMembership(w http.ResponseWriter, r *http.Request) {
+	var membershipUpdate *types.Membership
+
+	err := utils.ParseJSON(r, &membershipUpdate)
+
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, err)
+		return
+	}
+
+	err = h.store.UpdateMembership(membershipUpdate)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, err)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, "update route")
+}
+
+func (h *Handler) handleGetMembershipLocations(w http.ResponseWriter, r *http.Request) {
+	userId := auth.GetUserIDFromContext(r.Context())
+	fmt.Println("******Fetching membership data... ******")
+	membership, err := h.store.GetMembership(userId)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, err)
+		return
+	}
+	fmt.Println("******Fetching locations... ******")
+	membershipLocations, err := h.store.GetMembershipLocations(membership.ID)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, err)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, membershipLocations)
+}
+
+func (h *Handler) handleDeactivateMembership(w http.ResponseWriter, r *http.Request) {
+	userId := auth.GetUserIDFromContext(r.Context())
+
+	membership, err := h.store.GetMembership(userId)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, err)
+		return
+	}
+
+	membership.EndDate = time.Now()
+	membership.Status = "Inactive"
+
+	err = h.store.UpdateMembership(membership)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, err)
+		return
+	}
+	utils.WriteJSON(w, http.StatusOK, fmt.Sprintln("membership sucessfully deactivated"))
+}
+
+//  todo : Delete membership? Useful?
+// isAdmin := auth.GetAdminPermissionFromContext(r.Context())

@@ -5,11 +5,18 @@ import (
 	"time"
 )
 
-type UserStore interface {
-	GetUserByEmail(email string) (*User, error)
-	CreateUser(user User) error
-	GetUsers() ([]*User, error)
-	GetUserById(id int) (*User, error)
+type MembershipStore interface {
+	CreateMembership(Membership, []int) (int, error)
+	GetMembership(int) (*Membership, error)
+	CreateMembershipLocation(*MembershipLocation, *sql.Tx) error
+	GetMembershipLocations(int) ([]*Location, error)
+	UpdateMembership(*Membership) error
+
+	// New methods
+	DeleteMembership(int) error
+	// GetAllMemberships() ([]*Membership, error)
+	// GetMembershipsByUserID(int) ([]*Membership, error)
+	// RenewMembership(int) error
 }
 
 type LocationStore interface {
@@ -18,12 +25,24 @@ type LocationStore interface {
 	GetLocationByName(string) (*Location, error)
 	GetLocationsByKey(string, string) ([]*Location, error)
 	GetLocationByID(int) (*Location, error)
+
+	// New methods
+	// DeleteLocation(int) error
+	// UpdateLocation(Location) error
+	// GetLocationsByMembershipID(int) ([]*Location, error)
 }
 
-type MembershipStore interface {
-	CreateMembership(Membership, []int) (int, error)
-	GetMembership(int) (*Membership, error)
-	CreateMembershipLocation(*MembershipLocation, *sql.Tx) error
+type UserStore interface {
+	// Existing methods
+	GetUserByEmail(email string) (*User, error)
+	CreateUser(user User) error
+	GetUsers() ([]*User, error)
+	GetUserById(id int) (*User, error)
+
+	// New methods
+	// DeleteUser(int) error
+	// UpdateUser(User) error
+	// GetUsersByMembershipID(int) ([]*User, error)
 }
 
 type User struct {
@@ -61,11 +80,22 @@ type Membership struct {
 	EndDate        time.Time `json:"end_date"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
+	LocationIDS    []int     `json:"location_ids"`
 }
 
 type MembershipLocation struct {
 	MembershipID int `json:"membership_id"`
 	LocationID   int `json:"location_id"`
+}
+
+type UserMembershipLocations struct {
+	ID         int        `json:"id"`
+	FirstName  string     `json:"firstName"`
+	LastName   string     `json:"lastName"`
+	Email      string     `json:"email"`
+	CreatedAt  time.Time  `json:"createdAt"`
+	Locations  []Location `json:"locations"`
+	Membership Membership `json:"membership"`
 }
 
 type LoginUserPayload struct {

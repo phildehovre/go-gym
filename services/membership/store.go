@@ -2,6 +2,7 @@ package membership
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/phildehovre/go-gym/types"
 )
@@ -89,7 +90,63 @@ func (s *Store) GetMembership(userId int) (*types.Membership, error) {
 	}
 
 	return membership, nil
+}
 
+func (s *Store) GetMembershipLocations(mId int) ([]*types.Location, error) {
+	var membershipLocations []*types.Location
+	query := `SELECT ml.membership_id, l.*
+		FROM membershipLocations ml
+		JOIN locations l ON ml.location_id = l.id
+		WHERE ml.membership_id = ?
+		;`
+	rows, err := s.db.Query(query, mId)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		loc, err := scanRowsIntoMembershipLocation(rows)
+
+		if err != nil {
+			return nil, err
+		}
+		membershipLocations = append(membershipLocations, loc)
+	}
+
+	return membershipLocations, nil
+}
+
+func (s *Store) UpdateMembership(m *types.Membership) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	var exists int
+	err = tx.QueryRow("SELECT COUNT(*) FROM memberships WHERE id = ?", m.ID).Scan(&exists)
+	if err != nil || exists == 0 {
+		tx.Rollback()
+		return fmt.Errorf("membership with ID %d does not exist", m.ID)
+	}
+	fmt.Println("MEMBERSHIP: ", m)
+	_, err = tx.Exec(`UPDATE memberships
+	SET user_id = ?,
+	membership_type = ?,
+	status = ?,
+	start_date = ?,
+	end_date = ?
+	WHERE id = ?`,
+		m.UserID, m.MembershipType, m.Status, m.StartDate, m.EndDate, m.ID)
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func scanRowsIntoMembership(rows *sql.Rows) (*types.Membership, error) {
@@ -110,4 +167,36 @@ func scanRowsIntoMembership(rows *sql.Rows) (*types.Membership, error) {
 	}
 
 	return membership, nil
+}
+
+func scanRowsIntoMembershipLocation(rows *sql.Rows) (*types.Location, error) {
+	ml := new(types.MembershipLocation)
+	loc := new(types.Location)
+
+	err := rows.Scan(
+		&ml.MembershipID,
+		&loc.ID,
+		&loc.Name,
+		&loc.Address,
+		&loc.City,
+		&loc.State,
+		&loc.PostalCode,
+		&loc.Country,
+		&loc.PhoneNumber,
+		&loc.Email,
+		&loc.Capacity,
+		&loc.OperatingHours,
+		&loc.IsActive,
+		&loc.CreatedAt,
+		&loc.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return loc, nil
+}
+
+func (s *Store) DeleteMembership(id int) error {
+	_, err := s.db.Exec(`DELETE FROM memberships WHERE id = ? `, id)
+	return err
 }
