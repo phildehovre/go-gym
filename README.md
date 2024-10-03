@@ -83,7 +83,7 @@ IMPORTANT: All endpoints should be prefixed with `/api/v1`
     ```
 - Response:
     ```json
-    http code 200
+    Status: 201 Created
     ```
 
 #### `GET /locations`
