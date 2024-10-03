@@ -34,12 +34,12 @@ To get started with this API, follow the instructions below:
 
 4. Run migrations (if applicable):
     ```bash
-    go run migrations.go
+    go run cmd/migrate/main.go
     ```
 
 5. Start the server:
     ```bash
-    go run main.go
+    go run cmd/main.go
     ```
 
 ## Usage
@@ -49,7 +49,7 @@ This API uses JWT (JSON Web Token) for authentication. To interact with protecte
 
 1. Obtain a token by sending a POST request to `/auth/login`:
     ```bash
-    curl -X POST https://yourapi.com/auth/login -d '{
+    curl -X POST http://localhost:<port>/api/v1/register -d '{
         "email": "user@example.com",
         "password": "password123"
     }'
@@ -63,59 +63,27 @@ This API uses JWT (JSON Web Token) for authentication. To interact with protecte
 
 2. Pass the token in the `Authorization` header for subsequent requests:
     ```bash
-    curl -H "Authorization: Bearer <token>" https://yourapi.com/members
+    curl -H "Authorization: Bearer <token>" http://localhost:<port>/api/v1/login
     ```
 
 ### Endpoints
 
-#### `POST /members/register`
+IMPORTANT: All endpoints should be prefixed with `/api/v1`
+
+#### `POST /register`
 - Description: Register a new member.
 - Request:
     ```json
     {
-      "name": "John Doe",
+      "firstName": "John",
+      "lastName": "Doe",
       "email": "johndoe@example.com",
       "password": "password123",
-      "location_id": 1
     }
     ```
 - Response:
     ```json
-    {
-      "id": 1,
-      "name": "John Doe",
-      "email": "johndoe@example.com",
-      "location_id": 1
-    }
-    ```
-
-#### `GET /members`
-- Description: Retrieve a list of all members.
-- Response:
-    ```json
-    [
-      {
-        "id": 1,
-        "name": "John Doe",
-        "email": "johndoe@example.com",
-        "location_id": 1
-      }
-    ]
-    ```
-
-#### `POST /members/cancel`
-- Description: Cancel a membership.
-- Request:
-    ```json
-    {
-      "member_id": 1
-    }
-    ```
-- Response:
-    ```json
-    {
-      "message": "Membership cancelled for member_id: 1"
-    }
+    http code 200
     ```
 
 #### `GET /locations`
@@ -168,4 +136,4 @@ This project is licensed under the MIT License. See the `LICENSE` file for more 
 ## Contact
 For any questions or support, please contact:
 - Name: Philippe De Hovre
-- Email: your-email@example.com
+- Email: me@philippedehovre.com
