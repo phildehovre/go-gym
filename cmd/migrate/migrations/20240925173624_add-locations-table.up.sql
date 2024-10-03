@@ -13,6 +13,6 @@ CREATE TABLE
         `operating_hours` VARCHAR(100),
         `is_active` BOOLEAN DEFAULT TRUE,
         `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         UNIQUE(name, address, city)
     );

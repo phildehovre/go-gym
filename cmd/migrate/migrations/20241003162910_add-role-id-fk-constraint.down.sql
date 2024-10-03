@@ -1,0 +1,2 @@
+ALTER TABLE users
+DROP FOREIGN KEY fk_role_id;

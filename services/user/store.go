@@ -93,7 +93,6 @@ func ScanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 		&user.FirstName,
 		&user.LastName,
 		&user.Email,
-		&user.RoleID,
 		&user.Password,
 		&user.CreatedAt,
 	)
@@ -101,4 +100,19 @@ func ScanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+func (s *Store) UpdateUser(userId int, user *types.UpdateUserPayload) error {
+	_, err := s.db.Exec(`
+		UPDATE users 
+		SET firstName = ?, 
+		    lastName = ?, 
+		    email = ? 
+		WHERE id = ?`,
+		user.FirstName,
+		user.LastName,
+		user.Email,
+		userId,
+	)
+	return err
 }

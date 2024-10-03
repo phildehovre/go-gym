@@ -202,7 +202,7 @@ func (s *Store) DeleteMembership(id int) error {
 }
 
 func (s *Store) RenewMembership(m *types.Membership) error {
-	stmt := `UPDATE memberships SET status = ? start_date = ? end_date = ? WHERE id = ?`
+	stmt := `UPDATE memberships SET status = ?, start_date = ?, end_date = ? WHERE id = ?`
 	_, err := s.db.Exec(stmt, m.Status, m.StartDate, m.EndDate, m.ID)
 	return err
 }

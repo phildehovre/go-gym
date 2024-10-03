@@ -14,7 +14,7 @@ type MembershipStore interface {
 
 	// New methods
 	DeleteMembership(int) error
-	RenewMembership(int) error
+	RenewMembership(*Membership) error
 }
 
 type LocationStore interface {
@@ -27,19 +27,17 @@ type LocationStore interface {
 	// New methods
 	// DeleteLocation(int) error
 	// UpdateLocation(Location) error
-	// GetLocationsByMembershipID(int) ([]*Location, error)
 }
 
 type UserStore interface {
-	// Existing methods
 	GetUserByEmail(email string) (*User, error)
 	CreateUser(user User) error
 	GetUsers() ([]*User, error)
 	GetUserById(id int) (*User, error)
+	UpdateUser(int, *UpdateUserPayload) error
 
 	// New methods
 	// DeleteUser(int) error
-	// UpdateUser(User) error
 	// GetUsersByMembershipID(int) ([]*User, error)
 }
 
@@ -114,6 +112,12 @@ type LoginUserPayload struct {
 	Password string `json:"password"`
 }
 
+type UpdateUserPayload struct {
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+}
+
 type RegisterUserPayload struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
@@ -142,4 +146,10 @@ type CreateMembershipPayload struct {
 	StartDate      time.Time `json:"start_date"`
 	EndDate        time.Time `json:"end_date"`
 	LocationIDS    []int     `json:"location_id"`
+}
+
+type RenewMembershipPayload struct {
+	Status    string    `json:"status"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
 }

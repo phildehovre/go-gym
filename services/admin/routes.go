@@ -5,16 +5,16 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/phildehovre/go-gym/services/auth"
-	"github.com/phildehovre/go-gym/types"
+	"github.com/phildehovre/go-gym/services/user"
 	"github.com/phildehovre/go-gym/utils"
 )
 
 type Handler struct {
-	store     Store
-	userStore types.UserStore
+	store     *Store
+	userStore *user.Store
 }
 
-func (h *Handler) NewHandler(store Store, userStore types.UserStore) *Handler {
+func NewHandler(store *Store, userStore *user.Store) *Handler {
 	return &Handler{store: store, userStore: userStore}
 }
 

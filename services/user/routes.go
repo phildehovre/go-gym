@@ -24,6 +24,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/login", h.handleLogin).Methods("POST")
 	router.HandleFunc("/register", h.handleRegister).Methods("POST")
 	router.HandleFunc("/users", h.handleGetUsers).Methods("GET")
+	router.HandleFunc("/users", auth.WithJWTAuth(h.handleUpdateUser, h.store)).Methods("PATCH")
 
 }
 
@@ -113,4 +114,22 @@ func (h *Handler) handleGetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utils.WriteJSON(w, http.StatusOK, users)
+}
+
+func (h *Handler) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
+	userId := auth.GetUserIDFromContext(r.Context())
+
+	var updatedUser types.UpdateUserPayload
+
+	if err := utils.ParseJSON(r, &updatedUser); err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	err := h.store.UpdateUser(userId, &updatedUser)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, err)
+		return
+	}
+
 }

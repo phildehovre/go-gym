@@ -126,6 +126,7 @@ func AdminMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		role, ok := claims["role"].(string)
+		fmt.Println("jwt.go: USER ROLE", role)
 		if !ok || role != "Admin" {
 			premissionDenied(w)
 			return

@@ -32,6 +32,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/membership", auth.WithJWTAuth(h.handleUpdateMembership, h.userStore)).Methods(http.MethodPatch)
 	router.HandleFunc("/membership", auth.WithJWTAuth(h.handleDeactivateMembership, h.userStore)).Methods(http.MethodDelete)
 	router.HandleFunc("/membership/locations", auth.WithJWTAuth(h.handleGetMembershipLocations, h.userStore)).Methods(http.MethodGet)
+	router.HandleFunc("/membership/renew", auth.WithJWTAuth(h.handleRenewMembership, h.userStore)).Methods(http.MethodPatch)
 }
 
 func (h *Handler) handleCreateMembership(w http.ResponseWriter, r *http.Request) {
@@ -126,5 +127,27 @@ func (h *Handler) handleDeactivateMembership(w http.ResponseWriter, r *http.Requ
 	utils.WriteJSON(w, http.StatusOK, fmt.Sprintln("membership sucessfully deactivated"))
 }
 
-//  todo : Delete membership? Useful?
-// isAdmin := auth.GetAdminPermissionFromContext(r.Context())
+func (h *Handler) handleRenewMembership(w http.ResponseWriter, r *http.Request) {
+	userId := auth.GetUserIDFromContext(r.Context())
+	membership, err := h.store.GetMembership(userId)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, err)
+		return
+	}
+	var updatedMembership types.RenewMembershipPayload
+	err = utils.ParseJSON(r, &updatedMembership)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+	}
+
+	membership.Status = updatedMembership.Status
+	membership.StartDate = updatedMembership.StartDate
+	membership.EndDate = updatedMembership.EndDate
+
+	err = h.store.RenewMembership(membership)
+	if err != nil {
+		utils.WriteError(w, http.StatusNotFound, err)
+		return
+	}
+	utils.WriteJSON(w, http.StatusOK, nil)
+}

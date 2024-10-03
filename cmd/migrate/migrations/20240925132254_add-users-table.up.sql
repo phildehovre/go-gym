@@ -4,11 +4,9 @@ CREATE TABLE IF NOT EXISTS users (
     `firstName`  VARCHAR(255) NOT NULL,
     `lastName`  VARCHAR(255) NOT NULL,
     `email`  VARCHAR(255) NOT NULL,
-    `role_id` INT UNSIGNED default 2,
     `password` VARCHAR(255) NOT NULL,
     `createdAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
 PRIMARY KEY (id),
 UNIQUE KEY (email)
-FOREIGN KEY (role_id) REFERENCES roles(id)
 );
