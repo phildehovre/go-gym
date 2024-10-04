@@ -71,7 +71,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("PAYLOAD:email: %s, password: %s", payload.Email, payload.Password)
 	// validate payload against json in types.RegisterUserPayload
 	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
