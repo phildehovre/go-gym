@@ -63,32 +63,83 @@ This API uses JWT (JSON Web Token) for authentication. To interact with protecte
 
 2. Pass the token in the `Authorization` header for subsequent requests:
     ```bash
-    curl -H "Authorization: Bearer <token>" http://localhost:<port>/api/v1/login
+    curl -H "Authorization: <token> http://localhost:<port>/api/v1/login
     ```
 
 ### Endpoints
 
 IMPORTANT: All endpoints should be prefixed with `/api/v1`
 
-#### `POST /register`
-- Description: Register a new member.
-- Request:
+## API Endpoints
+
+### Authentication
+This API uses JWT for authentication. Admin routes require an admin role, enforced via `auth.AdminMiddleware`.
+
+### Membership Service
+
+#### `POST /membership`
+- **Description**: Create a new membership for the authenticated user.
+- **Request**:
     ```json
     {
-      "firstName": "John",
-      "lastName": "Doe",
-      "email": "johndoe@example.com",
-      "password": "password123",
+      "MembershipType": "Gold",
+      "Status": "Active",
+      "StartDate": "2024-01-01",
+      "EndDate": "2024-12-31",
+      "LocationIDS": [1, 2, 3]
     }
     ```
-- Response:
+- **Response**:
     ```json
-    Status: 201 Created
+    {
+      "status": "Membership created"
+    }
     ```
 
-#### `GET /locations`
-- Description: Retrieve a list of gym locations.
-- Response:
+#### `GET /membership`
+- **Description**: Retrieve the authenticated user's membership details.
+- **Response**:
+    ```json
+    {
+      "UserID": 1,
+      "MembershipType": "Gold",
+      "Status": "Active",
+      "StartDate": "2024-01-01",
+      "EndDate": "2024-12-31",
+      "Locations": ["Location1", "Location2"]
+    }
+    ```
+
+#### `PATCH /membership`
+- **Description**: Update membership details for the authenticated user.
+- **Request**:
+    ```json
+    {
+      "MembershipType": "Platinum",
+      "Status": "Active",
+      "StartDate": "2024-01-01",
+      "EndDate": "2025-12-31"
+    }
+    ```
+- **Response**:
+    ```json
+    {
+      "status": "Membership updated"
+    }
+    ```
+
+#### `DELETE /membership`
+- **Description**: Deactivate the authenticated user's membership.
+- **Response**:
+    ```json
+    {
+      "status": "Membership deactivated"
+    }
+    ```
+
+#### `GET /membership/locations`
+- **Description**: Retrieve available gym locations for memberships.
+- **Response**:
     ```json
     [
       {
@@ -99,27 +150,219 @@ IMPORTANT: All endpoints should be prefixed with `/api/v1`
     ]
     ```
 
-### Example Error Responses
+#### `PATCH /membership/renew`
+- **Description**: Renew the authenticated user's membership.
+- **Response**:
+    ```json
+    {
+      "status": "Membership renewed"
+    }
+    ```
 
-- 400 Bad Request:
+---
+
+### User Service
+
+#### `POST /login`
+- **Description**: Log in a user and retrieve a JWT token.
+- **Request**:
+    ```json
+    {
+      "email": "user@example.com",
+      "password": "password123"
+    }
+    ```
+- **Response**:
+    ```json
+    {
+      "token": "your.jwt.token"
+    }
+    ```
+
+#### `POST /register`
+- **Description**: Register a new user.
+- **Request**:
+    ```json
+    {
+      "FirstName": "John",
+      "LastName": "Doe",
+      "Email": "johndoe@example.com",
+      "Password": "password123"
+    }
+    ```
+- **Response**:
+    ```json
+    {
+      "status": "User registered"
+    }
+    ```
+
+#### `GET /users`
+- **Description**: Retrieve a list of all users (requires admin access).
+- **Response**:
+    ```json
+    [
+      {
+        "id": 1,
+        "FirstName": "John",
+        "LastName": "Doe",
+        "Email": "johndoe@example.com"
+      }
+    ]
+    ```
+
+#### `PATCH /users`
+- **Description**: Update the authenticated user's details.
+- **Request**:
+    ```json
+    {
+      "FirstName": "Jane",
+      "LastName": "Doe"
+    }
+    ```
+- **Response**:
+    ```json
+    {
+      "status": "User updated"
+    }
+    ```
+
+---
+
+### Admin Service
+
+#### `GET /admin/users`
+- **Description**: Retrieve a list of all users (requires admin access).
+- **Response**:
+    ```json
+    [
+      {
+        "id": 1,
+        "FirstName": "John",
+        "LastName": "Doe",
+        "Email": "johndoe@example.com"
+      }
+    ]
+    ```
+
+#### `GET /admin/memberships`
+- **Description**: Retrieve all memberships in the system (requires admin access).
+- **Response**:
+    ```json
+    [
+      {
+        "UserID": 1,
+        "MembershipType": "Gold",
+        "Status": "Active",
+        "StartDate": "2024-01-01",
+        "EndDate": "2024-12-31"
+      }
+    ]
+    ```
+
+---
+
+### Locations Service
+
+#### `POST /location`
+- **Description**: Create a new location.
+- **Request**:
+    ```json
+    {
+      "Name": "Central Gym",
+      "Address": "123 Fitness Ave",
+      "City": "Metropolis",
+      "State": "State",
+      "PostalCode": "12345",
+      "Country": "Country",
+      "PhoneNumber": "123-456-7890",
+      "Email": "centralgym@example.com",
+      "Capacity": 100,
+      "OperatingHours": "9 AM - 9 PM",
+      "IsActive": true
+    }
+    ```
+- **Response**:
+    ```json
+    {
+      "status": "Location created"
+    }
+    ```
+
+#### `GET /location`
+- **Description**: Retrieve all available locations.
+- **Response**:
+    ```json
+    [
+      {
+        "id": 1,
+        "Name": "Central Gym",
+        "Address": "123 Fitness Ave",
+        "City": "Metropolis",
+        "State": "State",
+        "PostalCode": "12345",
+        "Country": "Country",
+        "PhoneNumber": "123-456-7890",
+        "Email": "centralgym@example.com",
+        "Capacity": 100,
+        "OperatingHours": "9 AM - 9 PM",
+        "IsActive": true
+      }
+    ]
+    ```
+
+#### `GET /location/{id}`
+- **Description**: Retrieve details for a specific location by ID.
+- **Response**:
+    ```json
+    {
+      "id": 1,
+      "Name": "Central Gym",
+      "Address": "123 Fitness Ave",
+      "City": "Metropolis",
+      "State": "State",
+      "PostalCode": "12345",
+      "Country": "Country",
+      "PhoneNumber": "123-456-7890",
+      "Email": "centralgym@example.com",
+      "Capacity": 100,
+      "OperatingHours": "9 AM - 9 PM",
+      "IsActive": true
+    }
+    ```
+
+---
+
+### Common Error Responses
+
+- **400 Bad Request**:
     ```json
     {
       "error": "Invalid data format"
     }
     ```
 
-- 401 Unauthorized:
+- **401 Unauthorized**:
     ```json
     {
       "error": "Invalid token"
     }
     ```
 
-## Error Handling
-Common errors users may encounter and how to address them:
+- **403 Forbidden**:
+    ```json
+    {
+      "error": "You do not have permission to access this resource"
+    }
+    ```
 
-- `400 Bad Request`: Make sure all required fields are included and formatted correctly.
-- `401 Unauthorized`: Ensure a valid JWT token is passed in the `Authorization` header.
+- **404 Not Found**:
+    ```json
+    {
+      "error": "Resource not found"
+    }
+    ```
+
 
 ## Contributing
 If you'd like to contribute to this API, please follow these steps:
